@@ -1,0 +1,20 @@
+<!-- dialog_year_month_picker.xml -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="16dp">
+
+    <!-- Year Picker -->
+    <NumberPicker
+        android:id="@+id/year_picker"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <!-- Month Picker -->
+    <NumberPicker
+        android:id="@+id/month_picker"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp" />
+</LinearLayout>

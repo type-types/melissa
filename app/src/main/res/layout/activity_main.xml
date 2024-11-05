@@ -1,0 +1,60 @@
+<!-- activity_main.xml -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <!-- Year and Month Display -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_horizontal">
+
+        <TextView
+            android:id="@+id/tv_year"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="2024"
+            android:textSize="20sp"
+            android:padding="8dp"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <TextView
+            android:id="@+id/tv_month"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="November"
+            android:textSize="20sp"
+            android:padding="8dp"
+            android:clickable="true"
+            android:focusable="true" />
+    </LinearLayout>
+
+    <!-- Weekday Headers -->
+    <GridLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:columnCount="7"
+        android:padding="8dp">
+
+        <!-- Days of the Week -->
+        <TextView android:text="Sun" android:gravity="center" android:layout_width="0dp" android:layout_columnWeight="1" />
+        <TextView android:text="Mon" android:gravity="center" android:layout_width="0dp" android:layout_columnWeight="1" />
+        <TextView android:text="Tue" android:gravity="center" android:layout_width="0dp" android:layout_columnWeight="1" />
+        <TextView android:text="Wed" android:gravity="center" android:layout_width="0dp" android:layout_columnWeight="1" />
+        <TextView android:text="Thu" android:gravity="center" android:layout_width="0dp" android:layout_columnWeight="1" />
+        <TextView android:text="Fri" android:gravity="center" android:layout_width="0dp" android:layout_columnWeight="1" />
+        <TextView android:text="Sat" android:gravity="center" android:layout_width="0dp" android:layout_columnWeight="1" />
+    </GridLayout>
+
+    <!-- ViewPager for Calendar Fragments -->
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/viewPager"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:paddingTop="16dp" />
+</LinearLayout>

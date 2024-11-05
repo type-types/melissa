@@ -1,0 +1,28 @@
+<!-- fragment_calendar.xml -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="8dp">
+
+    <!-- Days Grid Layout -->
+    <GridLayout
+        android:id="@+id/days_grid"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:columnCount="7"
+        android:rowCount="6"
+        android:padding="4dp">
+
+        <!-- 예시 TextView - 실제로는 동적으로 추가됩니다 -->
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_columnWeight="1"
+            android:layout_rowWeight="1"
+            android:gravity="center"
+            android:padding="8dp"
+            android:layout_marginBottom="4dp" />
+    </GridLayout>
+
+</LinearLayout>
