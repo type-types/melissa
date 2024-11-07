@@ -1,9 +1,10 @@
-<!-- activity_main.xml -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:padding="16dp"
+    android:layout_marginBottom="40dp">
 
     <!-- Year and Month Display -->
     <LinearLayout
@@ -16,7 +17,6 @@
             android:id="@+id/tv_year"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="2024"
             android:textSize="20sp"
             android:padding="8dp"
             android:clickable="true"
@@ -26,7 +26,6 @@
             android:id="@+id/tv_month"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="November"
             android:textSize="20sp"
             android:padding="8dp"
             android:clickable="true"
@@ -55,6 +54,5 @@
         android:id="@+id/viewPager"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:paddingTop="16dp" />
+        android:layout_weight="1" />
 </LinearLayout>
