@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <!-- fragment_calendar.xml -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
@@ -12,7 +13,8 @@
         android:layout_weight="1"
         android:columnCount="7"
         android:rowCount="6"
-        android:padding="8dp">
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp">
 
         <!-- 예시 TextView - 실제로는 동적으로 추가됩니다 -->
         <TextView
@@ -20,7 +22,6 @@
             android:layout_height="0dp"
             android:layout_columnWeight="1"
             android:layout_rowWeight="1"
-            android:gravity="center"
-            android:layout_marginBottom="4dp" />
+            android:gravity="center"/>
     </GridLayout>
 </LinearLayout>

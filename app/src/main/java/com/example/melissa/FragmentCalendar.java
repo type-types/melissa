@@ -1,5 +1,7 @@
 package com.example.melissa;
 
+import android.app.AlertDialog;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -105,6 +107,9 @@ public class FragmentCalendar extends Fragment {
             dayView.setTextColor(getResources().getColor(android.R.color.holo_blue_dark));
         }
 
+        // 클릭 리스너 추가 - 일자 클릭 시 다이얼로그 표시
+        dayView.setOnClickListener(v -> showDayInfoDialog(day));
+
         // 레이아웃 설정
         GridLayout.LayoutParams params = new GridLayout.LayoutParams();
         params.width = 0;
@@ -115,4 +120,16 @@ public class FragmentCalendar extends Fragment {
 
         return dayView;
     }
+
+    private void showDayInfoDialog(int day) {
+        // 선택한 날짜 문자열 생성 (예: 2023-04-15 형식)
+        String selectedDate = year + "-" + (month + 1) + "-" + day;
+
+        // Intent를 통해 ViewDiaryActivity로 이동
+        Intent intent = new Intent(getContext(), ViewDiaryActivity.class);
+        intent.putExtra("selectedDate", selectedDate);  // 날짜 전달
+        startActivity(intent);  // 새로운 Activity 시작
+    }
+
+
 }
