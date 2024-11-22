@@ -29,7 +29,9 @@ android {
 }
 
 dependencies {
-
+    implementation 'com.squareup.retrofit2:retrofit:2.9.0' // Retrofit: HTTP 클라이언트 라이브러리
+    implementation 'com.squareup.retrofit2:converter-gson:2.9.0' // GSON: JSON 파싱을 위한 컨버터
+    implementation 'com.squareup.okhttp3:logging-interceptor:4.10.0' // OkHttp: 네트워크 요청 디버깅 및 최적화
     implementation 'androidx.appcompat:appcompat:1.5.1'
     implementation 'com.google.android.material:material:1.6.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
