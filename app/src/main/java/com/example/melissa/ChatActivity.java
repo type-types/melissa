@@ -18,8 +18,12 @@ public class ChatActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private ChatApiManager chatApiManager;
 
-    private EditText inputMessage; // 사용자 입력란
-    private Button sendButton;     // 보내기 버튼
+    private EditText inputMessage;
+    private Button sendButton;
+
+    private String threadId; // 생성된 Thread ID
+    private String runId;    // 생성된 Run ID
+    private List<String> receivedMessageIds = new ArrayList<>(); // 중복 메시지 방지용 ID 저장소
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,47 +40,13 @@ public class ChatActivity extends AppCompatActivity {
         // ChatApiManager 초기화
         chatApiManager = new ChatApiManager();
 
-        // 입력란 및 버튼 초기화
+        // 입력 필드 및 버튼 초기화
         inputMessage = findViewById(R.id.input_message);
         sendButton = findViewById(R.id.send_button);
 
-        // "보내기" 버튼 클릭 이벤트
-        sendButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                sendMessage();
-            }
-        });
-
-        // 채팅방 초기화
-        initializeChat();
+        sendButton.setOnClickListener(v -> sendMessage());
     }
 
-    /**
-     * 새로운 스레드를 생성하고 초기 메시지를 전송합니다.
-     */
-    private void initializeChat() {
-        String initialContent = "Welcome to the chat!";
-        List<ChatMessage> initialMessages = new ArrayList<>();
-        initialMessages.add(new ChatMessage("user", initialContent));
-
-        chatApiManager.createThread(initialMessages, new ApiCallback<String>() {
-            @Override
-            public void onSuccess(String threadId) {
-                Log.d(TAG, "스레드 생성 성공: " + threadId);
-                addMessage(new ChatMessage("user", initialContent));
-            }
-
-            @Override
-            public void onFailure(String errorMessage) {
-                Log.e(TAG, "스레드 생성 실패: " + errorMessage);
-            }
-        });
-    }
-
-    /**
-     * 사용자가 입력한 메시지를 전송합니다.
-     */
     private void sendMessage() {
         String content = inputMessage.getText().toString().trim();
 
@@ -85,21 +55,69 @@ public class ChatActivity extends AppCompatActivity {
             return;
         }
 
-        // 입력 메시지를 UI에 추가
+        // UI에 메시지 추가
         addMessage(new ChatMessage("user", content));
-
-        // 입력 필드 비우기
         inputMessage.setText("");
 
-        // 이후 서버와의 메시지 전송 로직 추가 가능 (예: API 호출)
-        // chatApiManager.createMessage(threadId, content, new ApiCallback<>() { ... });
+        // Run 생성 및 연속 작업 수행
+        createRun(content);
     }
 
-    /**
-     * 로컬 메시지 리스트에 새 메시지를 추가하고 화면을 갱신합니다.
-     *
-     * @param message 추가할 메시지 객체
-     */
+    private void createRun(String content) {
+        chatApiManager.createRun(threadId, BuildConfig.ASSISTANT_ID, new ApiCallback<String>() {
+            @Override
+            public void onSuccess(String result) {
+                runId = result; // Run ID 저장
+                Log.d(TAG, "Run 생성 성공: " + runId);
+
+                // Run 상태 확인
+                runPolling();
+            }
+
+            @Override
+            public void onFailure(String errorMessage) {
+                Log.e(TAG, "Run 생성 실패: " + errorMessage);
+            }
+        });
+    }
+
+    private void runPolling() {
+        chatApiManager.runPolling(threadId, runId, new ApiCallback<String>() {
+            @Override
+            public void onSuccess(String result) {
+                Log.d(TAG, "Run 상태: " + result);
+
+                // Run 완료 후 메시지 가져오기
+                fetchAssistantMessages();
+            }
+
+            @Override
+            public void onFailure(String errorMessage) {
+                Log.e(TAG, "Run 상태 확인 실패: " + errorMessage);
+            }
+        });
+    }
+
+    private void fetchAssistantMessages() {
+        chatApiManager.listMessages(threadId, new ApiCallback<List<ChatMessage>>() {
+            @Override
+            public void onSuccess(List<ChatMessage> messages) {
+                for (ChatMessage message : messages) {
+                    // 새로운 메시지만 추가
+                    if (!receivedMessageIds.contains(message.getId())) {
+                        addMessage(message);
+                        receivedMessageIds.add(message.getId()); // 메시지 ID 저장
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(String errorMessage) {
+                Log.e(TAG, "메시지 가져오기 실패: " + errorMessage);
+            }
+        });
+    }
+
     private void addMessage(ChatMessage message) {
         chatMessages.add(message);
         chatAdapter.notifyItemInserted(chatMessages.size() - 1);
