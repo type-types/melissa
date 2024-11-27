@@ -36,10 +36,12 @@ public interface GptApiService {
             @Body JsonObject body
     );
 
-    // Retrieve Run API
-    @GET("runs/{run_id}")
+    // Retrieve Run API (thread_id 추가)
+    @GET("threads/{thread_id}/runs/{run_id}")
     Call<JsonObject> retrieveRun(
             @Header("Authorization") String authorization,
+            @Header("OpenAI-Beta") String betaVersion,
+            @Path("thread_id") String threadId,
             @Path("run_id") String runId
     );
 
@@ -47,6 +49,7 @@ public interface GptApiService {
     @GET("threads/{thread_id}/messages")
     Call<JsonObject> listMessages(
             @Header("Authorization") String authorization,
+            @Header("OpenAI-Beta") String betaVersion,
             @Path("thread_id") String threadId
     );
 }

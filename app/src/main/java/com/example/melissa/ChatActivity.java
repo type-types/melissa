@@ -2,92 +2,107 @@ package com.example.melissa;
 
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
 import androidx.appcompat.app.AppCompatActivity;
-import com.google.gson.JsonObject;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ChatActivity extends AppCompatActivity {
     private static final String TAG = "ChatActivity";
+    private ChatAdapter chatAdapter;
+    private List<ChatMessage> chatMessages;
+    private RecyclerView recyclerView;
+    private ChatApiManager chatApiManager;
 
-    private GptApiService apiService;
+    private EditText inputMessage; // 사용자 입력란
+    private Button sendButton;     // 보내기 버튼
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
 
-        // Retrofit 인스턴스에서 GptApiService 생성
-        apiService = RetrofitClient.getInstance().create(GptApiService.class);
+        // RecyclerView 초기화
+        recyclerView = findViewById(R.id.recycler_view);
+        chatMessages = new ArrayList<>();
+        chatAdapter = new ChatAdapter(chatMessages);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerView.setAdapter(chatAdapter);
 
-        // 채팅 방 입장 시 스레드 생성
-        createThread();
+        // ChatApiManager 초기화
+        chatApiManager = new ChatApiManager();
+
+        // 입력란 및 버튼 초기화
+        inputMessage = findViewById(R.id.input_message);
+        sendButton = findViewById(R.id.send_button);
+
+        // "보내기" 버튼 클릭 이벤트
+        sendButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                sendMessage();
+            }
+        });
+
+        // 채팅방 초기화
+        initializeChat();
     }
 
-    private void createThread() {
-        // Request Body 생성
-        JsonObject requestBody = new JsonObject();
-        requestBody.add("messages", new JsonObject());
-        requestBody.add("tool_resources", null);
-        requestBody.add("metadata", new JsonObject());
+    /**
+     * 새로운 스레드를 생성하고 초기 메시지를 전송합니다.
+     */
+    private void initializeChat() {
+        String initialContent = "Welcome to the chat!";
+        List<ChatMessage> initialMessages = new ArrayList<>();
+        initialMessages.add(new ChatMessage("user", initialContent));
 
-        // API 호출
-        Call<JsonObject> call = apiService.createThread(
-                "Bearer " + BuildConfig.OPENAI_API_KEY,
-                "assistants=v2",
-                requestBody
-        );
-
-        call.enqueue(new Callback<JsonObject>() {
+        chatApiManager.createThread(initialMessages, new ApiCallback<String>() {
             @Override
-            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    String threadId = response.body().get("id").getAsString();
-                    Log.d(TAG, "Thread created successfully: " + threadId);
-
-                    // 이후 메시지 전송 등의 작업 수행
-                    createMessage(threadId, "Hello!");
-                } else {
-                    Log.e(TAG, "Failed to create thread: " + response.code());
-                }
+            public void onSuccess(String threadId) {
+                Log.d(TAG, "스레드 생성 성공: " + threadId);
+                addMessage(new ChatMessage("user", initialContent));
             }
 
             @Override
-            public void onFailure(Call<JsonObject> call, Throwable t) {
-                Log.e(TAG, "Error creating thread", t);
+            public void onFailure(String errorMessage) {
+                Log.e(TAG, "스레드 생성 실패: " + errorMessage);
             }
         });
     }
 
-    private void createMessage(String threadId, String content) {
-        // Request Body 생성
-        JsonObject requestBody = new JsonObject();
-        requestBody.addProperty("content", content);
+    /**
+     * 사용자가 입력한 메시지를 전송합니다.
+     */
+    private void sendMessage() {
+        String content = inputMessage.getText().toString().trim();
 
-        // API 호출
-        Call<JsonObject> call = apiService.createMessage(
-                "Bearer " + BuildConfig.OPENAI_API_KEY,
-                "assistants=v2",
-                threadId,
-                requestBody
-        );
+        if (content.isEmpty()) {
+            Log.w(TAG, "빈 메시지는 전송할 수 없습니다.");
+            return;
+        }
 
-        call.enqueue(new Callback<JsonObject>() {
-            @Override
-            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    String messageId = response.body().get("id").getAsString();
-                    Log.d(TAG, "Message sent successfully: " + messageId);
-                } else {
-                    Log.e(TAG, "Failed to send message: " + response.code());
-                }
-            }
+        // 입력 메시지를 UI에 추가
+        addMessage(new ChatMessage("user", content));
 
-            @Override
-            public void onFailure(Call<JsonObject> call, Throwable t) {
-                Log.e(TAG, "Error sending message", t);
-            }
-        });
+        // 입력 필드 비우기
+        inputMessage.setText("");
+
+        // 이후 서버와의 메시지 전송 로직 추가 가능 (예: API 호출)
+        // chatApiManager.createMessage(threadId, content, new ApiCallback<>() { ... });
+    }
+
+    /**
+     * 로컬 메시지 리스트에 새 메시지를 추가하고 화면을 갱신합니다.
+     *
+     * @param message 추가할 메시지 객체
+     */
+    private void addMessage(ChatMessage message) {
+        chatMessages.add(message);
+        chatAdapter.notifyItemInserted(chatMessages.size() - 1);
+        recyclerView.scrollToPosition(chatMessages.size() - 1);
     }
 }

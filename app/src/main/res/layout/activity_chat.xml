@@ -1,67 +1,66 @@
-<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="16dp">
+    android:orientation="vertical">
 
-    <!-- Top bar layout -->
+    <!-- 상단 제목과 저장 버튼 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:padding="8dp"
-        android:gravity="center_vertical">
+        android:background="#EEEEEE"
+        android:gravity="center_vertical"> <!-- 세로 기준으로 가운데 정렬 -->
 
-        <!-- Title (Melissa) -->
+        <!-- 제목 -->
         <TextView
-            android:id="@+id/title_text"
+            android:id="@+id/chat_title"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="멜리사"
+            android:text="채팅방"
             android:textSize="20sp"
             android:textStyle="bold"
-            android:gravity="start" />
+            android:gravity="center_vertical"
+        android:padding="8dp" />
 
-        <!-- Save button -->
+        <!-- 저장 버튼 -->
         <Button
             android:id="@+id/save_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="저장" />
+            android:text="저장"
+            android:layout_gravity="center_vertical"
+        android:padding="8dp" />
     </LinearLayout>
 
-    <!-- RecyclerView for chat messages -->
+    <!-- RecyclerView -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycler_view"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:scrollbars="vertical" />
+        android:layout_weight="1" />
 
-    <!-- Input section -->
+    <!-- 메시지 입력란과 버튼 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:padding="8dp">
 
-        <!-- EditText for typing messages -->
         <EditText
             android:id="@+id/input_message"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:hint="Type a message"
-            android:background="@drawable/rounded_edittext_background"
+            android:hint="메시지를 입력하세요"
             android:padding="8dp" />
 
-        <!-- Button for sending messages -->
         <Button
             android:id="@+id/send_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Send" />
+            android:text="보내기" />
     </LinearLayout>
 </LinearLayout>
