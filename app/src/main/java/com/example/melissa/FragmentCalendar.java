@@ -12,6 +12,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
 import java.util.Calendar;
@@ -102,9 +103,9 @@ public class FragmentCalendar extends Fragment {
         int dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
 
         if (dayOfWeek == Calendar.SUNDAY) {
-            dayView.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
+            dayView.setTextColor(ContextCompat.getColor(requireContext(), android.R.color.holo_red_dark));
         } else if (dayOfWeek == Calendar.SATURDAY) {
-            dayView.setTextColor(getResources().getColor(android.R.color.holo_blue_dark));
+            dayView.setTextColor(ContextCompat.getColor(requireContext(), android.R.color.holo_blue_dark));
         }
 
         // 클릭 리스너 추가 - 일자 클릭 시 다이얼로그 표시
@@ -130,6 +131,5 @@ public class FragmentCalendar extends Fragment {
         intent.putExtra("selectedDate", selectedDate);  // 날짜 전달
         startActivity(intent);  // 새로운 Activity 시작
     }
-
 
 }

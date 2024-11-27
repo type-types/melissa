@@ -1,83 +1,67 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="16dp">
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:orientation="horizontal">
-
-        <TextView
-            android:id="@+id/tvTitle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="대화 페이지"
-            android:textSize="26sp"
-            android:textColor="@android:color/black"
-            android:gravity="center" />
-    </LinearLayout>
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="?android:attr/listDivider" />
-
-    <!-- ScrollView로 채팅 영역 설정 -->
-    <ScrollView
-        android:id="@+id/scrollView"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:fillViewport="true"
-        android:padding="8dp">
-
-        <LinearLayout
-            android:id="@+id/chatLayout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical" />
-    </ScrollView>
-
+    <!-- Top bar layout -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:padding="8dp">
+        android:padding="8dp"
+        android:gravity="center_vertical">
 
-        <EditText
-            android:id="@+id/etMessage"
+        <!-- Title (Melissa) -->
+        <TextView
+            android:id="@+id/title_text"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:background="@drawable/rounded_edittext_background"
-            android:hint="메시지를 입력하세요"
-            android:minHeight="48dp" />
+            android:text="멜리사"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:gravity="start" />
 
-        <!-- 전송 버튼 -->
+        <!-- Save button -->
         <Button
-            android:id="@+id/btnSend"
+            android:id="@+id/save_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="➤"
-            android:textSize="18sp"
-            android:backgroundTint="@color/primary"
-            android:textColor="@android:color/white"
-            android:padding="12dp"
-            android:contentDescription="메시지 보내기 버튼" />
+            android:text="저장" />
     </LinearLayout>
 
-    <!-- 대화 저장 버튼 -->
-    <Button
-        android:id="@+id/btnSave"
+    <!-- RecyclerView for chat messages -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recycler_view"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:scrollbars="vertical" />
+
+    <!-- Input section -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="대화 저장"
-        android:padding="12dp"
-        android:layout_marginTop="8dp"
-        android:contentDescription="대화를 저장하는 버튼" />
+        android:orientation="horizontal">
+
+        <!-- EditText for typing messages -->
+        <EditText
+            android:id="@+id/input_message"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:hint="Type a message"
+            android:background="@drawable/rounded_edittext_background"
+            android:padding="8dp" />
+
+        <!-- Button for sending messages -->
+        <Button
+            android:id="@+id/send_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Send" />
+    </LinearLayout>
 </LinearLayout>

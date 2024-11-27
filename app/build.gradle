@@ -14,6 +14,18 @@ android {
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        // local.properties에서 값 읽기
+        def localProperties = new Properties()
+        def localPropertiesFile = rootProject.file("local.properties")
+        if (localPropertiesFile.exists()) {
+            localProperties.load(localPropertiesFile.newDataInputStream())
+        }
+
+        // BuildConfig에 값 추가
+        buildConfigField "String", "OPENAI_API_KEY", "\"${localProperties.getProperty('OPENAI_API_KEY', '')}\""
+        buildConfigField "String", "PICOVOICE_ACCESS_KEY", "\"${localProperties.getProperty('PORCUPINE_ACCESS_KEY', '')}\""
+        buildConfigField "String", "ASSISTANT_ID", "\"${localProperties.getProperty('ASSISTANT_ID', '')}\""
     }
 
     buildTypes {
