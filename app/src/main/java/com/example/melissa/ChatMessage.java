@@ -24,18 +24,38 @@ public class ChatMessage {
     }
 
     /**
+     * ChatMessage 객체를 JsonObject로 변환하는 메서드.
+     *
+     * 이 메서드는 단일 ChatMessage 객체를 JSON 형식으로 변환하여 반환합니다.
+     * 주로 API 호출 시 단일 메시지를 요청 본문에 포함해야 할 때 사용됩니다.
+     *
+     * @param message 변환할 ChatMessage 객체
+     * @return 변환된 JsonObject
+     */
+    public static JsonObject toJson(ChatMessage message) {
+        JsonObject jsonObject = new JsonObject();
+        jsonObject.addProperty("role", message.getRole()); // role 필드 추가
+        jsonObject.addProperty("content", message.getContent()); // content 필드 추가
+        return jsonObject;
+    }
+
+    /**
      * ChatMessage 리스트를 JSON 배열로 변환하는 메서드.
      *
+     * 이 메서드는 ChatMessage 객체 리스트를 순회하며 각 객체를 JSON 형식으로 변환한 뒤,
+     * JsonArray 객체에 추가합니다. 이를 통해 API 호출에 필요한 요청 본문 형태를
+     * 쉽게 구성할 수 있습니다.
+     *
      * @param messages 변환할 ChatMessage 리스트
-     * @return 변환된 JsonArray
+     * @return 변환된 JsonArray (각 ChatMessage 객체가 JSON 형식으로 포함됨)
      */
     public static JsonArray toJsonArray(List<ChatMessage> messages) {
         JsonArray jsonArray = new JsonArray();
         for (ChatMessage message : messages) {
             JsonObject jsonObject = new JsonObject();
-            jsonObject.addProperty("role", message.getRole());
-            jsonObject.addProperty("content", message.getContent());
-            jsonArray.add(jsonObject);
+            jsonObject.addProperty("role", message.getRole()); // role 필드 추가
+            jsonObject.addProperty("content", message.getContent()); // content 필드 추가
+            jsonArray.add(jsonObject); // JsonObject를 JsonArray에 추가
         }
         return jsonArray;
     }

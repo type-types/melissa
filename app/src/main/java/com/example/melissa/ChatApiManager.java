@@ -9,6 +9,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -23,14 +24,13 @@ public class ChatApiManager {
     }
 
     /**
-     * 새로운 스레드를 생성하는 API 호출.
+     * 새로운 스레드를 생성하는 API 호출 (빈 메시지로 생성).
      *
-     * @param chatMessages ChatMessage 리스트
-     * @param callback     성공/실패 콜백
+     * @param callback 성공/실패 콜백
      */
-    public void createThread(List<ChatMessage> chatMessages, ApiCallback<String> callback) {
+    public void createThread(ApiCallback<String> callback) {
         JsonObject requestBody = new JsonObject();
-        requestBody.add("messages", ChatMessage.toJsonArray(chatMessages)); // ChatMessage 클래스를 활용
+        requestBody.add("messages", new JsonArray()); // 빈 메시지 배열
         requestBody.add("tool_resources", null);
         requestBody.add("metadata", new JsonObject());
 
@@ -59,6 +59,50 @@ public class ChatApiManager {
     }
 
     /**
+     * 메시지 전송 API 호출
+     *
+     * @param threadId   메시지를 보낼 스레드 ID
+     * @param message    전송할 ChatMessage 객체
+     * @param callback   성공/실패 콜백
+     */
+    /**
+     * 메시지 전송 API 호출
+     *
+     * @param threadId   메시지를 보낼 스레드 ID
+     * @param message    전송할 ChatMessage 객체
+     * @param callback   성공/실패 콜백
+     */
+    public void createMessage(String threadId, ChatMessage message, ApiCallback<JsonObject> callback) {
+        // 요청 본문 생성
+        JsonObject requestBody = new JsonObject();
+        requestBody.addProperty("role", message.getRole()); // role 필드 추가
+        requestBody.addProperty("content", message.getContent()); // content 필드 추가
+
+        Call<JsonObject> call = apiService.createMessage(
+                "Bearer " + BuildConfig.OPENAI_API_KEY, // Authorization 헤더
+                "assistants=v2",                        // OpenAI-Beta 헤더
+                threadId,                               // Path 파라미터: threadId
+                requestBody                             // 요청 본문
+        );
+
+        call.enqueue(new Callback<JsonObject>() {
+            @Override
+            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    callback.onSuccess(response.body());
+                } else {
+                    callback.onFailure("Error: " + response.code());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<JsonObject> call, Throwable t) {
+                callback.onFailure("Network error: " + t.getMessage());
+            }
+        });
+    }
+
+    /**
      * Run 생성 API 호출
      *
      * @param threadId     스레드 ID
@@ -68,6 +112,9 @@ public class ChatApiManager {
     public void createRun(String threadId, String assistantId, ApiCallback<String> callback) {
         JsonObject requestBody = new JsonObject();
         requestBody.addProperty("assistant_id", assistantId);
+
+        // 로그 추가: 요청 정보 확인
+        Log.d(TAG, "Run 생성 요청: Thread ID = " + threadId + ", Assistant ID = " + assistantId);
 
         Call<JsonObject> call = apiService.createRun(
                 "Bearer " + BuildConfig.OPENAI_API_KEY,
@@ -79,16 +126,23 @@ public class ChatApiManager {
         call.enqueue(new Callback<JsonObject>() {
             @Override
             public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                // 응답 성공 여부 확인
                 if (response.isSuccessful() && response.body() != null) {
                     String runId = response.body().get("id").getAsString(); // Run ID 추출
+                    Log.d(TAG, "Run 생성 성공: Run ID = " + runId);
                     callback.onSuccess(runId);
                 } else {
+                    // 실패 로그 추가: 상태 코드 및 응답 본문
+                    String errorBody = response.errorBody() != null ? response.errorBody().toString() : "null";
+                    Log.e(TAG, "Run 생성 실패: 상태 코드 = " + response.code() + ", 응답 본문 = " + errorBody);
                     callback.onFailure("Error: " + response.code());
                 }
             }
 
             @Override
             public void onFailure(Call<JsonObject> call, Throwable t) {
+                // 네트워크 오류 로그 추가
+                Log.e(TAG, "Run 생성 네트워크 오류: " + t.getMessage(), t);
                 callback.onFailure("Network error: " + t.getMessage());
             }
         });

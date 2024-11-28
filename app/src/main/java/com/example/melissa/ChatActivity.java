@@ -54,19 +54,37 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void initializeChat() {
-        List<ChatMessage> initialMessages = new ArrayList<>();
-        initialMessages.add(new ChatMessage("assistant", "Hello! How can I assist you?"));
-
-        chatApiManager.createThread(initialMessages, new ApiCallback<String>() {
+        chatApiManager.createThread(new ApiCallback<String>() {
             @Override
             public void onSuccess(String result) {
-                threadId = result;
+                threadId = result; // 생성된 threadId 저장
                 Log.d(TAG, "Thread 생성 성공: " + threadId);
+
+                // 첫 메시지 전송
+                sendInitialMessage();
             }
 
             @Override
             public void onFailure(String errorMessage) {
                 Log.e(TAG, "Thread 생성 실패: " + errorMessage);
+            }
+        });
+    }
+
+    private void sendInitialMessage() {
+        String initialMessageContent = "오늘 뭐했어?";
+        ChatMessage initialMessage = new ChatMessage("assistant", initialMessageContent); // 역할을 "assistant"로 설정
+        addMessage(initialMessage);
+
+        chatApiManager.createMessage(threadId, initialMessage, new ApiCallback<JsonObject>() {
+            @Override
+            public void onSuccess(JsonObject result) {
+                Log.d(TAG, "초기 메시지 전송 성공: " + result.toString());
+            }
+
+            @Override
+            public void onFailure(String errorMessage) {
+                Log.e(TAG, "초기 메시지 전송 실패: " + errorMessage);
             }
         });
     }
@@ -78,19 +96,42 @@ public class ChatActivity extends AppCompatActivity {
             return;
         }
 
-        addMessage(new ChatMessage("user", content));
+        ChatMessage userMessage = new ChatMessage("user", content);
+        addMessage(userMessage);
         inputMessage.setText("");
 
-        createRun(content);
+        if (threadId != null) {
+            // 메시지 생성
+            chatApiManager.createMessage(threadId, userMessage, new ApiCallback<JsonObject>() {
+                @Override
+                public void onSuccess(JsonObject result) {
+                    Log.d(TAG, "메시지 전송 성공: " + result.toString());
+                    createRun(); // 메시지 전송 성공 후 Run 생성
+                }
+
+                @Override
+                public void onFailure(String errorMessage) {
+                    Log.e(TAG, "메시지 전송 실패: " + errorMessage);
+                }
+            });
+        } else {
+            Log.e(TAG, "threadId가 초기화되지 않았습니다. 메시지를 전송할 수 없습니다.");
+        }
     }
 
-    private void createRun(String content) {
+    private void createRun() {
         chatApiManager.createRun(threadId, BuildConfig.ASSISTANT_ID, new ApiCallback<String>() {
             @Override
             public void onSuccess(String result) {
-                runId = result;
+                runId = result; // Run ID 저장
                 Log.d(TAG, "Run 생성 성공: " + runId);
-                runPolling();
+
+                // Run 생성 성공 후 runPolling 호출
+                if (runId != null) {
+                    runPolling(); // Run ID가 유효하면 Polling 시작
+                } else {
+                    Log.e(TAG, "Run ID가 null입니다. Polling을 시작할 수 없습니다.");
+                }
             }
 
             @Override
@@ -101,7 +142,12 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void runPolling() {
-        this.pollingRunnable = () -> {
+        if (runId == null) {
+            Log.e(TAG, "Run ID가 null입니다. Polling을 시작할 수 없습니다.");
+            return;
+        }
+
+        pollingRunnable = () -> {
             chatApiManager.retrieveRun(threadId, runId, new ApiCallback<JsonObject>() {
                 @Override
                 public void onSuccess(JsonObject result) {
@@ -122,7 +168,7 @@ public class ChatActivity extends AppCompatActivity {
             });
         };
 
-        handler.post(pollingRunnable); // 첫 번째 폴링 시작
+        handler.post(pollingRunnable); // 첫 번째 Polling 시작
     }
 
     private void fetchAssistantMessages() {
