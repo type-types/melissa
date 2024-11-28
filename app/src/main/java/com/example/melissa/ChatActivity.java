@@ -178,6 +178,7 @@ public class ChatActivity extends AppCompatActivity {
                 chatMessages.clear(); // 기존 메시지 초기화
                 chatMessages.addAll(messages); // 새 메시지 추가
                 chatAdapter.notifyDataSetChanged(); // UI 갱신
+                recyclerView.scrollToPosition(chatMessages.size() - 1); // 가장 마지막 메시지로 스크롤
             }
 
             @Override

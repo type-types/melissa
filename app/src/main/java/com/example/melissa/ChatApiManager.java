@@ -10,6 +10,7 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -198,6 +199,8 @@ public class ChatApiManager {
             public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     List<ChatMessage> messages = ChatMessage.fromJsonResponse(response.body());
+                    // 메시지 순서를 역순으로 변경
+                    Collections.reverse(messages);
                     callback.onSuccess(messages);
                 } else {
                     callback.onFailure("Error: " + response.code());
