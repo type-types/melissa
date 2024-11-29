@@ -2,16 +2,20 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:focusable="false"
+    android:focusableInTouchMode="false">
 
-    <!-- 상단 제목과 저장 버튼 -->
+    <!-- 상단 제목과 초기화/저장 버튼 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:padding="8dp"
         android:background="#EEEEEE"
-        android:gravity="center_vertical"> <!-- 세로 기준으로 가운데 정렬 -->
+        android:gravity="center_vertical"
+        android:focusable="false"
+        android:focusableInTouchMode="false">
 
         <!-- 제목 -->
         <TextView
@@ -23,7 +27,20 @@
             android:textSize="20sp"
             android:textStyle="bold"
             android:gravity="center_vertical"
-        android:padding="8dp" />
+            android:padding="8dp"
+            android:focusable="false"
+            android:focusableInTouchMode="false" />
+
+        <!-- 초기화 버튼 -->
+        <Button
+            android:id="@+id/reset_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="초기화"
+            android:layout_gravity="center_vertical"
+            android:padding="8dp"
+            android:focusable="false"
+            android:focusableInTouchMode="false" />
 
         <!-- 저장 버튼 -->
         <Button
@@ -31,8 +48,11 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="저장"
+            android:layout_marginStart="8dp"
             android:layout_gravity="center_vertical"
-        android:padding="8dp" />
+            android:padding="8dp"
+            android:focusable="false"
+            android:focusableInTouchMode="false" />
     </LinearLayout>
 
     <!-- RecyclerView -->
@@ -40,14 +60,18 @@
         android:id="@+id/recycler_view"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1" />
+        android:layout_weight="1"
+        android:focusable="false"
+        android:focusableInTouchMode="false" />
 
-    <!-- 메시지 입력란과 버튼 -->
+    <!-- 메시지 입력란과 보내기 버튼 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:padding="8dp">
+        android:padding="8dp"
+        android:focusable="false"
+        android:focusableInTouchMode="false">
 
         <EditText
             android:id="@+id/input_message"
@@ -55,12 +79,14 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:hint="메시지를 입력하세요"
-            android:padding="8dp" />
+            android:padding="8dp"
+            android:imeOptions="actionDone" />
 
+        <!-- 보내기 버튼 -->
         <Button
             android:id="@+id/send_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="보내기" />
+            android:text="보내기"/>
     </LinearLayout>
 </LinearLayout>
