@@ -1,6 +1,5 @@
-package com.example.melissa;
+package com.example.melissa.fragments;
 
-import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -14,6 +13,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+
+import com.example.melissa.R;
+import com.example.melissa.activities.ViewDiaryActivity;
 
 import java.util.Calendar;
 

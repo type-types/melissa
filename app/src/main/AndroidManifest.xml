@@ -20,7 +20,7 @@
         android:networkSecurityConfig="@xml/network_security_config">
 
         <activity
-            android:name=".MainActivity"
+            android:name=".activities.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -30,8 +30,8 @@
                 android:name="android.app.lib_name"
                 android:value="" />
         </activity>
-        <activity android:name=".ViewDiaryActivity" />
-        <activity android:name=".ChatActivity" />
+        <activity android:name=".activities.ViewDiaryActivity" />
+        <activity android:name=".activities.ChatActivity" />
 
     </application>
 

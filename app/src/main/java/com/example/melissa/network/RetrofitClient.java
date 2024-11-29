@@ -1,4 +1,6 @@
-package com.example.melissa;
+package com.example.melissa.network;
+
+import com.example.melissa.BuildConfig;
 
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;

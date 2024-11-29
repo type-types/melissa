@@ -1,4 +1,4 @@
-package com.example.melissa;
+package com.example.melissa.network;
 
 /**
  * API 응답을 처리하기 위한 제네릭 콜백 인터페이스.

@@ -1,4 +1,4 @@
-package com.example.melissa;
+package com.example.melissa.activities;
 
 import android.os.Bundle;
 import android.view.View;
@@ -7,6 +7,8 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.example.melissa.R;
 
 public class ViewDiaryActivity extends AppCompatActivity {
 

@@ -1,5 +1,5 @@
 // FloatingActionButtonHelper.java
-package com.example.melissa;
+package com.example.melissa.utils;
 
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
@@ -8,6 +8,8 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.view.Gravity;
 import android.widget.FrameLayout;
+
+import com.example.melissa.activities.ChatActivity;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 public class FloatingActionButtonHelper {

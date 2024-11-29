@@ -1,4 +1,4 @@
-package com.example.melissa;
+package com.example.melissa.activities;
 
 import android.Manifest;
 import android.app.AlertDialog;
@@ -14,6 +14,10 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.viewpager2.widget.ViewPager2;
+
+import com.example.melissa.adapters.CalendarPagerAdapter;
+import com.example.melissa.R;
+import com.example.melissa.utils.FloatingActionButtonHelper;
 
 import ai.picovoice.porcupine.*;
 
@@ -31,18 +35,18 @@ public class MainActivity extends AppCompatActivity {
 
     private FloatingActionButtonHelper fabHelper;
     private PorcupineManager porcupineManager;
-    private static final String ACCESS_KEY = BuildConfig.PICOVOICE_ACCESS_KEY; // Picovoice Access Key
+    private static final String ACCESS_KEY = com.example.melissa.BuildConfig.PICOVOICE_ACCESS_KEY; // Picovoice Access Key
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(com.example.melissa.R.layout.activity_main);
 
         requestMicrophonePermission(); // 마이크 권한 요청
 
-        tvYear = findViewById(R.id.tv_year);
-        tvMonth = findViewById(R.id.tv_month);
-        viewPager = findViewById(R.id.viewPager);
+        tvYear = findViewById(com.example.melissa.R.id.tv_year);
+        tvMonth = findViewById(com.example.melissa.R.id.tv_month);
+        viewPager = findViewById(com.example.melissa.R.id.viewPager);
 
         Calendar calendar = Calendar.getInstance();
         currentYear = calendar.get(Calendar.YEAR);
@@ -128,10 +132,10 @@ public class MainActivity extends AppCompatActivity {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Select Year and Month");
 
-        View dialogView = getLayoutInflater().inflate(R.layout.dialog_year_month_picker, null);
+        View dialogView = getLayoutInflater().inflate(com.example.melissa.R.layout.dialog_year_month_picker, null);
         builder.setView(dialogView);
 
-        NumberPicker yearPicker = dialogView.findViewById(R.id.year_picker);
+        NumberPicker yearPicker = dialogView.findViewById(com.example.melissa.R.id.year_picker);
         NumberPicker monthPicker = dialogView.findViewById(R.id.month_picker);
 
         int displayedYear = Integer.parseInt(tvYear.getText().toString());

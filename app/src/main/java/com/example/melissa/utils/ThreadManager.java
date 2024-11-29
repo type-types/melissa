@@ -1,4 +1,4 @@
-package com.example.melissa;
+package com.example.melissa.utils;
 
 import android.content.Context;
 import android.content.SharedPreferences;

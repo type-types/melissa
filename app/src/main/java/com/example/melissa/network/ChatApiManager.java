@@ -1,7 +1,9 @@
-package com.example.melissa;
+package com.example.melissa.network;
 
 import android.util.Log;
 
+import com.example.melissa.BuildConfig;
+import com.example.melissa.models.ChatMessage;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
@@ -9,7 +11,6 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -22,6 +23,36 @@ public class ChatApiManager {
 
     public ChatApiManager() {
         this.apiService = RetrofitClient.getInstance().create(GptApiService.class);
+    }
+
+    /**
+     * OpenAI GPT에 일반적인 요청을 보내는 메서드.
+     *
+     * @param requestBody 요청 본문 (JSON 형식)
+     * @param callback 성공/실패 콜백 (결과를 JsonObject로 반환)
+     */
+    public void generalGptRequest(JsonObject requestBody, ApiCallback<JsonObject> callback) {
+        // Retrofit API 호출
+        Call<JsonObject> call = apiService.generalGptRequest(
+                "Bearer " + BuildConfig.OPENAI_API_KEY, // Authorization 헤더
+                requestBody
+        );
+
+        call.enqueue(new Callback<JsonObject>() {
+            @Override
+            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    callback.onSuccess(response.body());
+                } else {
+                    callback.onFailure("Error: " + response.code());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<JsonObject> call, Throwable t) {
+                callback.onFailure("Network error: " + t.getMessage());
+            }
+        });
     }
 
     /**

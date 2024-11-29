@@ -1,4 +1,4 @@
-package com.example.melissa;
+package com.example.melissa.models;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;

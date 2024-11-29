@@ -1,9 +1,11 @@
-package com.example.melissa;
+package com.example.melissa.adapters;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
+
+import com.example.melissa.fragments.FragmentCalendar;
 
 import java.util.Calendar;
 

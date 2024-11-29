@@ -1,4 +1,4 @@
-package com.example.melissa;
+package com.example.melissa.network;
 
 import com.google.gson.JsonObject;
 import retrofit2.Call;
@@ -51,5 +51,12 @@ public interface GptApiService {
             @Header("Authorization") String authorization,
             @Header("OpenAI-Beta") String betaVersion,
             @Path("thread_id") String threadId
+    );
+
+    // General GPT Request API
+    @POST("chat/completions") // Base URL에서 "v1/" 이미 포함
+    Call<JsonObject> generalGptRequest(
+            @Header("Authorization") String authorization,
+            @Body JsonObject body
     );
 }
