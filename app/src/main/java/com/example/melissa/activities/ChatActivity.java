@@ -11,6 +11,7 @@ import android.widget.EditText;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.melissa.database.Summary;
 import com.example.melissa.network.ApiCallback;
 import com.example.melissa.BuildConfig;
 import com.example.melissa.adapters.ChatAdapter;
@@ -21,6 +22,10 @@ import com.example.melissa.utils.ThreadManager;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 import android.content.ContentValues;
 import android.database.sqlite.SQLiteDatabase;
@@ -39,13 +44,14 @@ public class ChatActivity extends AppCompatActivity {
     private ChatApiManager chatApiManager;
     private Runnable pollingRunnable;
     private SQLiteHelper dbHelper; // SQLiteHelper 인스턴스
+    private boolean isSummaryProcessing = false;
 
     private EditText inputMessage;
     private Button sendButton;
+    private Button saveButton;
 
     private String runId; // 생성된 Run ID
     private JsonObject assistantResponseJson; // assistant 응답 저장 변수
-
 
     private final Handler handler = new Handler(Looper.getMainLooper()); // 메인 스레드 핸들러
     private static final long POLLING_INTERVAL = 1000L; // 폴링 간격 (1초)
@@ -69,7 +75,7 @@ public class ChatActivity extends AppCompatActivity {
         inputMessage = findViewById(R.id.input_message);
         sendButton = findViewById(R.id.send_button);
         Button resetButton = findViewById(R.id.reset_button); // 초기화 버튼
-        Button saveButton = findViewById(R.id.save_button); // 저장 버튼
+        saveButton = findViewById(R.id.save_button); // 저장 버튼
 
         sendButton.setOnClickListener(v -> sendMessage());
         resetButton.setOnClickListener(v -> resetThreadId()); // 초기화 버튼 동작 설정
@@ -276,6 +282,16 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void processSummaryRequest() {
+        if (isSummaryProcessing) {
+            Log.w(TAG, "요약 요청이 이미 처리 중입니다.");
+            Toast.makeText(this, "이미 요약 요청이 처리 중입니다.", Toast.LENGTH_SHORT).show();
+            return; // 처리 중이면 함수 종료
+        }
+
+        // 요약 요청 상태로 변경
+        isSummaryProcessing = true;
+        saveButton.setEnabled(false); // 버튼 비활성화
+
         // 1. 요청 본문 생성
         JsonObject requestBody = new JsonObject();
         JsonArray messages = new JsonArray();
@@ -284,10 +300,46 @@ public class ChatActivity extends AppCompatActivity {
         JsonObject systemMessage = new JsonObject();
         systemMessage.addProperty("role", "system");
         systemMessage.addProperty("content",
-                "당신은 사용자의 일일 활동, 감사한 일, 감정, 그리고 계획들을 깔끔하게 정리해주는 비서입니다.\n" +
+                "당신은 사용자의 하루를 요약하고 정리하여 JSON 형식으로 응답하는 비서입니다.\n" +
+                        "\n" +
                         "**Instruction**\n" +
-                        "- 사용자의 입력을 분석하여 각 카테고리별로 핵심 포인트를 추출하여 정리해주세요.\n" +
-                        "- 반드시 지정된 JSON 형식으로 출력해야 합니다.\n");
+                        "1. `title` 필드:\n" +
+                        "   - 제목을 한국어로만 작성합니다. 하루를 돌아보았을 때 기분 좋거나 의미 있는 이름을 간결하고 창의적으로 작성하세요.\n" +
+                        "\n" +
+                        "2. `summary` 필드:\n" +
+                        "   - 제목 및 내용을 한국어로만 작성합니다. HTML 형식으로 작성하며, 다음 정보를 포함하세요:\n" +
+                        "     - 활동1, 활동2 등과 같이 주요 활동을 각각 나열하고, 해당 내용과 감정을 포함.\n" +
+                        "     - 만족도를 0~10 사이로 평가하며, 이유를 간단히 설명.\n" +
+                        "     - 미래 계획은 2개 이상의 주요 계획을 포함하고, 필요에 따라 더 많은 활동을 추가할 수 있도록 구성.\n" +
+                        "     - 중요한 내용은 `<strong>` 태그를 사용하여 강조할 수 있습니다.\n" +
+                        "\n" +
+                        "3. 각 섹션은 `<h2>`와 `<h3>` 태그로 구분하여 작성하세요:\n" +
+                        "   - `<h2>`는 주요 섹션(예: \"오늘의 주요 활동\", \"만족도\", \"내일의 계획\")의 제목을 작성.\n" +
+                        "   - `<h3>`는 각 활동이나 세부 내용을 작성하며, 필요에 따라 더 많은 활동을 추가할 수 있도록 구성.\n" +
+                        "   - 예시:\n" +
+                        "     <html><body>\n" +
+                        "     <h2>오늘의 주요 활동</h2>\n" +
+                        "     <h3>활동 1</h3>\n" +
+                        "     <p><strong>내용 1:</strong> 중요한 내용을 강조할 수 있습니다.</p>\n" +
+                        "     <h3>활동 2</h3>\n" +
+                        "     <p>내용 2</p>\n" +
+                        "     ... (여기에 더 많은 활동을 추가할 수 있음.)\n" +
+                        "     <h2>만족도</h2>\n" +
+                        "     <p>n/10 - <strong>만족도 이유</strong>: 필요시 강조</p>\n" +
+                        "     <h2>내일의 계획</h2>\n" +
+                        "     <h3>계획 1</h3>\n" +
+                        "     <p>계획 내용 1</p>\n" +
+                        "     <h3>계획 2</h3>\n" +
+                        "     <p><strong>계획 내용 2</strong>: 중요한 계획을 강조</p>\n" +
+                        "     ... (여기에 더 많은 계획을 추가할 수 있음.)\n" +
+                        "     </body></html>\n" +
+                        "\n" +
+                        "4. 출력은 반드시 아래의 JSON 형식이어야 합니다:\n" +
+                        "{\n" +
+                        "    \"title\": \"하루를 대표하는 제목\",\n" +
+                        "    \"summary\": \"<html><body>...</body></html>\"\n" +
+                        "}"
+        );
         messages.add(systemMessage);
 
         // User 메시지 추가
@@ -304,6 +356,7 @@ public class ChatActivity extends AppCompatActivity {
         userMessage.addProperty("content", userContent.toString().trim());
         messages.add(userMessage);
 
+        // 요청 본문에 모델과 메시지 배열 추가
         requestBody.addProperty("model", "gpt-4");
         requestBody.add("messages", messages);
 
@@ -318,8 +371,15 @@ public class ChatActivity extends AppCompatActivity {
                 Gson gson = new Gson();
                 String fullConversationJson = gson.toJson(chatMessages);
 
+                // 현재 날짜 가져오기
+                String currentDate = getCurrentDate();
+
                 // 결과를 DB에 저장
-                saveToDatabase(content, fullConversationJson);
+                if (content != null && fullConversationJson != null) {
+                    saveToDatabase(currentDate, content, fullConversationJson);
+                } else {
+                    Log.e(TAG, "content 또는 fullConversationJson이 null입니다.");
+                }
             }
 
             @Override
@@ -356,43 +416,41 @@ public class ChatActivity extends AppCompatActivity {
      * @param summaryJson       요약 내용 (JSON 문자열)
      * @param fullConversationJson 전체 대화 내용 (JSON 문자열)
      */
-    private void saveToDatabase(String summaryJson, String fullConversationJson) {
+    private void saveToDatabase(String date, String summaryJson, String fullConversationJson) {
         if (dbHelper == null) {
             Log.e(TAG, "SQLiteHelper가 초기화되지 않았습니다!");
             Toast.makeText(this, "오류: 데이터베이스가 초기화되지 않았습니다.", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        SQLiteDatabase db = null;
         try {
-            db = dbHelper.getWritableDatabase();
+            // Summary 객체 생성
+            Summary summary = new Summary(date, summaryJson, fullConversationJson);
 
-            ContentValues values = new ContentValues();
-            values.put("summary_json", summaryJson);
-            values.put("full_conversation_json", fullConversationJson);
+            // SQLiteHelper의 upsertSummary 메서드 호출
+            dbHelper.upsertSummary(summary);
 
-            // 데이터 삽입 전에 로그로 출력
-            Log.d(TAG, "저장될 데이터: ");
-            Log.d(TAG, "Summary JSON: " + summaryJson);
-            Log.d(TAG, "Full Conversation JSON: " + fullConversationJson);
+            // 저장 완료 토스트 메시지 표시
+            runOnUiThread(() -> Toast.makeText(this, "데이터가 저장되었습니다!", Toast.LENGTH_SHORT).show());
 
-            long rowId = db.insert("summaries", null, values);
-            if (rowId != -1) {
-                Log.d(TAG, "데이터 저장 성공. Row ID: " + rowId);
+            isSummaryProcessing = false; // 요청 처리 완료
+            saveButton.setEnabled(true); // 버튼 활성화
 
-                // 저장 완료 토스트 메시지 표시
-                runOnUiThread(() -> Toast.makeText(this, "저장되었습니다!", Toast.LENGTH_SHORT).show());
-            } else {
-                Log.e(TAG, "데이터 저장 실패");
-                runOnUiThread(() -> Toast.makeText(this, "저장에 실패했습니다.", Toast.LENGTH_SHORT).show());
-            }
+            Log.d(TAG, "데이터 저장 성공: 날짜 = " + date);
+
+            int rowCount = dbHelper.getRowCount();
+            Log.d("ChatActivity", "chat_summaries.db 파일 내 총 행 개수: " + rowCount);
         } catch (Exception e) {
             Log.e(TAG, "데이터 저장 중 오류 발생", e);
-            runOnUiThread(() -> Toast.makeText(this, "오류 발생: 저장할 수 없습니다.", Toast.LENGTH_SHORT).show());
-        } finally {
-            if (db != null) {
-                db.close();
-            }
+            runOnUiThread(() -> Toast.makeText(this, "저장 중 오류가 발생했습니다.", Toast.LENGTH_SHORT).show());
         }
     }
+
+
+    // 현재 날짜를 가져오는 메서드 추가
+    private String getCurrentDate() {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        return sdf.format(new Date());
+    }
+
 }

@@ -13,8 +13,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
 
     // 테이블 이름 및 컬럼 이름
     private static final String TABLE_NAME = "summaries";
-    private static final String COLUMN_ID = "id";
-    private static final String COLUMN_TIMESTAMP = "timestamp";
+    private static final String COLUMN_DATE = "date";
     private static final String COLUMN_SUMMARY_JSON = "summary_json";
     private static final String COLUMN_FULL_CONVERSATION_JSON = "full_conversation_json";
 
@@ -30,8 +29,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db) {
         // 테이블 생성 SQL
         String createTable = "CREATE TABLE " + TABLE_NAME + " (" +
-                COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                COLUMN_TIMESTAMP + " DATETIME DEFAULT CURRENT_TIMESTAMP, " +
+                COLUMN_DATE + " TEXT PRIMARY KEY, " + // 날짜를 기본 키로 설정
                 COLUMN_SUMMARY_JSON + " TEXT NOT NULL, " +
                 COLUMN_FULL_CONVERSATION_JSON + " TEXT NOT NULL)";
         try {
@@ -55,77 +53,93 @@ public class SQLiteHelper extends SQLiteOpenHelper {
     }
 
     /**
-     * 요약 데이터를 데이터베이스에 삽입하는 메서드.
+     * 데이터를 삽입하거나 업데이트하는 메서드.
      *
-     * @param summaryJson 요약 내용 (JSON 직렬화된 문자열)
-     * @param fullConversationJson 전체 대화 내용 (JSON 직렬화된 문자열)
+     * @param summary Summary 객체
      */
-    public void insertSummary(String summaryJson, String fullConversationJson) {
+    public void upsertSummary(Summary summary) {
         SQLiteDatabase db = null;
         try {
-            db = this.getWritableDatabase(); // 쓰기 가능한 DB 가져오기
+            db = this.getWritableDatabase();
 
             ContentValues values = new ContentValues();
-            values.put(COLUMN_SUMMARY_JSON, summaryJson); // 요약 JSON
-            values.put(COLUMN_FULL_CONVERSATION_JSON, fullConversationJson); // 전체 대화 JSON
+            values.put(COLUMN_DATE, summary.getDate());
+            values.put(COLUMN_SUMMARY_JSON, summary.getSummaryJson());
+            values.put(COLUMN_FULL_CONVERSATION_JSON, summary.getConversationJson());
 
-            long rowId = db.insert(TABLE_NAME, null, values); // 데이터 삽입
+            // 기존 데이터를 덮어쓰기 위해 REPLACE 사용
+            long rowId = db.replace(TABLE_NAME, null, values);
             if (rowId != -1) {
-                Log.d(TAG, "새로운 요약 저장 완료. Row ID: " + rowId);
+                Log.d(TAG, "데이터 저장 완료. Row ID: " + rowId);
             } else {
-                Log.e(TAG, "데이터 삽입 실패");
+                Log.e(TAG, "데이터 저장 실패");
             }
         } catch (Exception e) {
-            Log.e(TAG, "데이터 삽입 중 오류 발생", e);
+            Log.e(TAG, "데이터 저장 중 오류 발생", e);
         } finally {
             if (db != null) {
-                db.close(); // DB 연결 닫기
+                db.close();
             }
         }
     }
 
     /**
-     * 저장된 요약 데이터를 조회하는 메서드.
+     * 특정 날짜의 데이터를 Summary 객체로 조회하는 메서드.
      *
-     * @return Cursor 객체 (데이터 조회 결과)
+     * @param date 조회할 날짜 (YYYY-MM-DD 형식)
+     * @return Summary 객체 또는 null (데이터가 없는 경우)
      */
-    public Cursor getSummaries() {
+    public Summary getSummaryByDate(String date) {
         SQLiteDatabase db = null;
         Cursor cursor = null;
+        Summary summary = null;
+
         try {
-            db = this.getReadableDatabase(); // 읽기 가능한 DB 가져오기
+            db = this.getReadableDatabase();
 
-            String query = "SELECT * FROM " + TABLE_NAME + " ORDER BY " + COLUMN_TIMESTAMP + " DESC";
-            cursor = db.rawQuery(query, null); // 결과 반환
-            Log.d(TAG, "요약 데이터 조회 성공. 총 데이터 수: " + cursor.getCount());
-        } catch (Exception e) {
-            Log.e(TAG, "데이터 조회 중 오류 발생", e);
-        }
-        return cursor;
-    }
+            String query = "SELECT * FROM " + TABLE_NAME + " WHERE " + COLUMN_DATE + "=?";
+            cursor = db.rawQuery(query, new String[]{date});
 
-    /**
-     * 특정 ID로 저장된 데이터를 삭제하는 메서드.
-     *
-     * @param id 삭제할 데이터의 ID
-     */
-    public void deleteSummary(int id) {
-        SQLiteDatabase db = null;
-        try {
-            db = this.getWritableDatabase(); // 쓰기 가능한 DB 가져오기
-
-            int rowsAffected = db.delete(TABLE_NAME, COLUMN_ID + "=?", new String[]{String.valueOf(id)});
-            if (rowsAffected > 0) {
-                Log.d(TAG, "삭제 완료. 삭제된 행 수: " + rowsAffected);
+            if (cursor != null && cursor.moveToFirst()) {
+                String summaryJson = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_SUMMARY_JSON));
+                String conversationJson = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_FULL_CONVERSATION_JSON));
+                summary = new Summary(date, summaryJson, conversationJson);
+                Log.d(TAG, "Summary 조회 성공: " + summary);
             } else {
-                Log.w(TAG, "삭제할 데이터가 존재하지 않음. ID: " + id);
+                Log.d(TAG, "Summary 데이터가 존재하지 않음: 날짜 = " + date);
             }
         } catch (Exception e) {
-            Log.e(TAG, "데이터 삭제 중 오류 발생", e);
+            Log.e(TAG, "Summary 조회 중 오류 발생", e);
         } finally {
-            if (db != null) {
-                db.close(); // DB 연결 닫기
-            }
+            if (cursor != null) cursor.close();
+            if (db != null) db.close();
         }
+
+        return summary;
     }
+
+    public int getRowCount() {
+        SQLiteDatabase db = null;
+        Cursor cursor = null;
+        int rowCount = 0;
+
+        try {
+            db = this.getReadableDatabase();
+
+            // 총 행 개수를 계산하는 쿼리 실행
+            cursor = db.rawQuery("SELECT COUNT(*) FROM " + TABLE_NAME, null);
+
+            if (cursor != null && cursor.moveToFirst()) {
+                rowCount = cursor.getInt(0); // 첫 번째 열의 값을 가져옴
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "행 개수 계산 중 오류 발생", e);
+        } finally {
+            if (cursor != null) cursor.close();
+            if (db != null) db.close();
+        }
+
+        return rowCount;
+    }
+
 }
