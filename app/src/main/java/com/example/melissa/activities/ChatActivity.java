@@ -51,6 +51,7 @@ public class ChatActivity extends AppCompatActivity {
     private Button saveButton;
 
     private String runId; // 생성된 Run ID
+    private String threadId; // 생성된 Thread ID
     private JsonObject assistantResponseJson; // assistant 응답 저장 변수
 
     private final Handler handler = new Handler(Looper.getMainLooper()); // 메인 스레드 핸들러
@@ -101,36 +102,27 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void initializeChat() {
-        String threadId = threadManager.getOrCreateThreadId();
+        threadManager.getOrCreateThreadId(new ApiCallback<String>() {
+            @Override
+            public void onSuccess(String result) {
+                threadId = result; // Thread ID 저장
+                Log.d(TAG, "Thread ID 초기화 완료: " + threadId);
 
-        if (threadId == null) {
-            // threadId가 없으면 새로 생성
-            chatApiManager.createThread(new ApiCallback<String>() {
-                @Override
-                public void onSuccess(String result) {
-                    Log.d(TAG, "Thread 생성 성공: " + result);
+                // 1. 이전 메시지 불러오기
+                fetchAssistantMessages(threadId);
 
-                    // ThreadManager에 새 threadId 저장
-                    threadManager.createNewThreadId(result);
+                // 2. 초기 메시지 전송
+                sendInitialMessage(threadId);
+            }
 
-                    // 새 threadId로 대화 초기화
-                    sendInitialMessage(result);
-                }
-
-                @Override
-                public void onFailure(String errorMessage) {
-                    Log.e(TAG, "Thread 생성 실패: " + errorMessage);
-                }
-            });
-        } else {
-            // 기존 threadId가 있으면 이전 메시지 불러오기
-            Log.d(TAG, "기존 Thread ID 사용: " + threadId);
-            fetchAssistantMessages(threadId); // 이전 대화 내역 불러오기
-
-            // 초기 메시지 전송 시도
-            sendInitialMessage(threadId);
-        }
+            @Override
+            public void onFailure(String errorMessage) {
+                Log.e(TAG, "Thread ID 생성 실패: " + errorMessage);
+                Toast.makeText(ChatActivity.this, "Thread ID 생성 실패: " + errorMessage, Toast.LENGTH_SHORT).show();
+            }
+        });
     }
+
 
     private void sendInitialMessage(String threadId) {
         // 초기 메시지 전송 여부 확인
@@ -166,11 +158,12 @@ public class ChatActivity extends AppCompatActivity {
             return;
         }
 
+        // 사용자 메시지 객체 생성 및 UI에 추가
         ChatMessage userMessage = new ChatMessage("user", content);
         addMessage(userMessage);
         inputMessage.setText("");
 
-        String threadId = threadManager.getOrCreateThreadId();
+        // threadId를 사용하여 openAI 서버에 메시지 전송
         if (threadId != null) {
             chatApiManager.createMessage(threadId, userMessage, new ApiCallback<JsonObject>() {
                 @Override
