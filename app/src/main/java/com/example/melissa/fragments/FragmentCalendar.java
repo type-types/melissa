@@ -55,31 +55,49 @@ public class FragmentCalendar extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_calendar, container, false);
+        return inflater.inflate(R.layout.fragment_calendar, container, false);
+    }
 
-        GridLayout daysGrid = view.findViewById(R.id.days_grid);
+    @Override
+    public void onResume() {
+        super.onResume();
 
-        Calendar calendar = Calendar.getInstance();
-        calendar.set(Calendar.YEAR, year);
-        calendar.set(Calendar.MONTH, month);
-        calendar.set(Calendar.DAY_OF_MONTH, 1);
+        // Refresh the titles map
+        databaseHelper.openDatabase();
+        titlesMap = databaseHelper.getTitlesForMonth(year, month);
+        databaseHelper.closeDatabase();
 
-        int firstDayOfWeek = calendar.get(Calendar.DAY_OF_WEEK) - 1;
-        int daysInMonth = calendar.getActualMaximum(Calendar.DAY_OF_MONTH);
+        // Redraw the calendar with the updated data
+        refreshCalendar();
+    }
 
-        daysGrid.removeAllViews();
+    private void refreshCalendar() {
+        View view = getView();
+        if (view != null) {
+            GridLayout daysGrid = view.findViewById(R.id.days_grid);
 
-        for (int i = 0; i < firstDayOfWeek; i++) {
-            Space emptySpace = createEmptySpace();
-            daysGrid.addView(emptySpace);
+            Calendar calendar = Calendar.getInstance();
+            calendar.set(Calendar.YEAR, year);
+            calendar.set(Calendar.MONTH, month);
+            calendar.set(Calendar.DAY_OF_MONTH, 1);
+
+            int firstDayOfWeek = calendar.get(Calendar.DAY_OF_WEEK) - 1;
+            int daysInMonth = calendar.getActualMaximum(Calendar.DAY_OF_MONTH);
+
+            daysGrid.removeAllViews();
+
+            // Add empty spaces for days before the first day of the month
+            for (int i = 0; i < firstDayOfWeek; i++) {
+                Space emptySpace = createEmptySpace();
+                daysGrid.addView(emptySpace);
+            }
+
+            // Add day views for each day in the month
+            for (int day = 1; day <= daysInMonth; day++) {
+                TextView dayView = createDayView(day);
+                daysGrid.addView(dayView);
+            }
         }
-
-        for (int day = 1; day <= daysInMonth; day++) {
-            TextView dayView = createDayView(day);
-            daysGrid.addView(dayView);
-        }
-
-        return view;
     }
 
     private Space createEmptySpace() {
@@ -98,34 +116,28 @@ public class FragmentCalendar extends Fragment {
     private TextView createDayView(int day) {
         TextView dayView = new TextView(getContext());
 
-        // Format the date as a string
         String monthStr = String.format("%02d", month + 1);
         String dayStr = String.format("%02d", day);
         String dateStr = year + "-" + monthStr + "-" + dayStr;
 
-        // Set up the day number
         dayView.setText(String.valueOf(day));
         dayView.setGravity(android.view.Gravity.CENTER_HORIZONTAL | android.view.Gravity.TOP);
         dayView.setPadding(8, 16, 8, 8);
         dayView.setTextSize(12);
 
-        // Check if there's a title for this date
         if (titlesMap.containsKey(dateStr)) {
             String title = titlesMap.get(dateStr);
 
-            // Truncate the title if it's too long and add ellipsis
             if (title.length() > 10) {
                 title = title.substring(0, 10) + "...";
             }
 
-            // Add a new line and a bullet point before the title
             String styledTitle = "\n\u2022 " + title;
             dayView.append(styledTitle);
             dayView.setTextSize(12);
             dayView.setTextColor(ContextCompat.getColor(requireContext(), android.R.color.black));
         }
 
-        // Set color for weekends
         Calendar calendar = Calendar.getInstance();
         calendar.set(year, month, day);
         int dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
@@ -136,20 +148,17 @@ public class FragmentCalendar extends Fragment {
             dayView.setTextColor(ContextCompat.getColor(requireContext(), android.R.color.holo_blue_dark));
         }
 
-        // Add a click listener to show detailed info for the day
         dayView.setOnClickListener(v -> showDayInfoDialog(day));
 
-        // Set the layout parameters for the day view
         GridLayout.LayoutParams params = new GridLayout.LayoutParams();
         params.width = 0;
-        params.height = 0; // Set height to 0 when using weights
+        params.height = 0;
         params.columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f);
         params.rowSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f);
         dayView.setLayoutParams(params);
 
         return dayView;
     }
-
 
     private void showDayInfoDialog(int day) {
         String selectedDate = year + "-" + (month + 1) + "-" + day;

@@ -7,6 +7,10 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+
 public class SQLiteHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "chat_summaries.db"; // 데이터베이스 이름
     private static final int DATABASE_VERSION = 1; // 데이터베이스 버전
@@ -60,10 +64,12 @@ public class SQLiteHelper extends SQLiteOpenHelper {
     public void upsertSummary(Summary summary) {
         SQLiteDatabase db = null;
         try {
+            String todayDate = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
+
             db = this.getWritableDatabase();
 
             ContentValues values = new ContentValues();
-            values.put(COLUMN_DATE, summary.getDate());
+            values.put(COLUMN_DATE, todayDate);
             values.put(COLUMN_SUMMARY_JSON, summary.getSummaryJson());
             values.put(COLUMN_FULL_CONVERSATION_JSON, summary.getConversationJson());
 
