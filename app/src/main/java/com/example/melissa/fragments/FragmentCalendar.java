@@ -46,7 +46,6 @@ public class FragmentCalendar extends Fragment {
             month = getArguments().getInt("month");
         }
 
-        // Initialize DatabaseHelper with context
         databaseHelper = new DatabaseHelper(requireContext());
         databaseHelper.openDatabase();
         titlesMap = databaseHelper.getTitlesForMonth(year, month);
@@ -99,21 +98,34 @@ public class FragmentCalendar extends Fragment {
     private TextView createDayView(int day) {
         TextView dayView = new TextView(getContext());
 
+        // Format the date as a string
         String monthStr = String.format("%02d", month + 1);
         String dayStr = String.format("%02d", day);
         String dateStr = year + "-" + monthStr + "-" + dayStr;
 
+        // Set up the day number
         dayView.setText(String.valueOf(day));
         dayView.setGravity(android.view.Gravity.CENTER_HORIZONTAL | android.view.Gravity.TOP);
         dayView.setPadding(8, 16, 8, 8);
         dayView.setTextSize(12);
 
+        // Check if there's a title for this date
         if (titlesMap.containsKey(dateStr)) {
             String title = titlesMap.get(dateStr);
-            dayView.append("\n" + title);
-            dayView.setTextSize(10);
+
+            // Truncate the title if it's too long and add ellipsis
+            if (title.length() > 10) {
+                title = title.substring(0, 10) + "...";
+            }
+
+            // Add a new line and a bullet point before the title
+            String styledTitle = "\n\u2022 " + title;
+            dayView.append(styledTitle);
+            dayView.setTextSize(12);
+            dayView.setTextColor(ContextCompat.getColor(requireContext(), android.R.color.black));
         }
 
+        // Set color for weekends
         Calendar calendar = Calendar.getInstance();
         calendar.set(year, month, day);
         int dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
@@ -124,17 +136,20 @@ public class FragmentCalendar extends Fragment {
             dayView.setTextColor(ContextCompat.getColor(requireContext(), android.R.color.holo_blue_dark));
         }
 
+        // Add a click listener to show detailed info for the day
         dayView.setOnClickListener(v -> showDayInfoDialog(day));
 
+        // Set the layout parameters for the day view
         GridLayout.LayoutParams params = new GridLayout.LayoutParams();
         params.width = 0;
-        params.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+        params.height = 0; // Set height to 0 when using weights
         params.columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f);
         params.rowSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f);
         dayView.setLayoutParams(params);
 
         return dayView;
     }
+
 
     private void showDayInfoDialog(int day) {
         String selectedDate = year + "-" + (month + 1) + "-" + day;

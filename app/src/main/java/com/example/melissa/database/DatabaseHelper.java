@@ -3,6 +3,7 @@ package com.example.melissa.database;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
 import org.json.JSONObject;
 
 import java.util.HashMap;
@@ -36,9 +37,21 @@ public class DatabaseHelper {
         Cursor cursor = database.rawQuery(query, new String[]{datePattern});
 
         if (cursor != null && cursor.moveToFirst()) {
+            // Cache column indices
+            int dateColIndex = cursor.getColumnIndex("date");
+            int summaryJsonColIndex = cursor.getColumnIndex("summary_json");
+
+            // Check if columns exist
+            if (dateColIndex == -1 || summaryJsonColIndex == -1) {
+                // Log an error message or handle accordingly
+                Log.e("DatabaseHelper", "Required columns are missing from the result set.");
+                cursor.close();
+                return titlesMap; // or throw an exception if preferred
+            }
+
             do {
-                String date = cursor.getString(cursor.getColumnIndex("date"));
-                String summaryJson = cursor.getString(cursor.getColumnIndex("summary_json"));
+                String date = cursor.getString(dateColIndex);
+                String summaryJson = cursor.getString(summaryJsonColIndex);
 
                 String title = "";
                 try {
@@ -51,6 +64,10 @@ public class DatabaseHelper {
                 titlesMap.put(date, title);
             } while (cursor.moveToNext());
             cursor.close();
+        } else {
+            if (cursor != null) {
+                cursor.close();
+            }
         }
 
         return titlesMap;
