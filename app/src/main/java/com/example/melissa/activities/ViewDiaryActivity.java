@@ -1,72 +1,107 @@
 package com.example.melissa.activities;
 
+import android.content.Intent;
 import android.os.Bundle;
-import android.view.View;
+import android.util.Log;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.text.HtmlCompat;
 
 import com.example.melissa.R;
+import com.example.melissa.database.SQLiteHelper;
+import com.example.melissa.database.Summary;
+
+import org.json.JSONObject;
 
 public class ViewDiaryActivity extends AppCompatActivity {
 
-    private TextView tvDate;
-    private EditText etTitle, etContent;
-    private Button btnSave, btnEdit;
+    private static final String TAG = "ViewDiaryActivity";
+
+    private TextView tvDate, tvTitle, tvContent;
+    private Button btnViewConversation;
+    private SQLiteHelper dbHelper;
+    private String selectedDate;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_view_diary);
 
+        // Layout에서 뷰 초기화
         tvDate = findViewById(R.id.tv_date);
-        etTitle = findViewById(R.id.et_title);
-        etContent = findViewById(R.id.et_content);
-        btnSave = findViewById(R.id.btn_save);
-        btnEdit = findViewById(R.id.btn_edit);
+        tvTitle = findViewById(R.id.tv_title);
+        tvContent = findViewById(R.id.tv_content);
+        btnViewConversation = findViewById(R.id.btn_view_conversation);
+
+        dbHelper = new SQLiteHelper(this);
 
         // Intent로부터 선택된 날짜 수신
-        String selectedDate = getIntent().getStringExtra("selectedDate");
-        tvDate.setText(selectedDate);  // 상단에 날짜 표시
+        selectedDate = getIntent().getStringExtra("selectedDate");
 
-        // 로컬 데이터 조회하여 제목과 본문 불러오기 (없을 경우 빈 상태 유지)
-        loadDiary(selectedDate);
-
-        // 저장 버튼 클릭 시
-        btnSave.setOnClickListener(v -> saveDiary(selectedDate));
-
-        // 수정 버튼 클릭 시 (기존 내용 수정 가능)
-        btnEdit.setOnClickListener(v -> enableEditing());
+        if (selectedDate != null && !selectedDate.isEmpty()) {
+            tvDate.setText(selectedDate); // 상단에 날짜 표시
+            loadDiary(selectedDate); // 해당 날짜의 데이터 로드
+        } else {
+            Log.e(TAG, "선택된 날짜가 전달되지 않았습니다.");
+            tvDate.setText("No Date Selected");
+            tvTitle.setText("No Title");
+            tvContent.setText("No Content");
+            btnViewConversation.setEnabled(false); // 대화보기 버튼 비활성화
+        }
     }
 
+    /**
+     * 특정 날짜의 데이터를 SQLiteHelper에서 불러와 화면에 표시하는 메서드.
+     *
+     * @param date 조회할 날짜
+     */
     private void loadDiary(String date) {
-        // SharedPreferences 등을 통해 데이터 로드
-        // (여기서 title, content가 로드되었다고 가정)
-        String title = ""; // 저장된 제목
-        String content = ""; // 저장된 내용
+        try {
+            Summary summary = dbHelper.getSummaryByDate(date);
 
-        // 제목과 본문 내용이 있다면 화면에 표시
-        etTitle.setText(title);
-        etContent.setText(content);
+            if (summary != null) {
+                // Summary 데이터 가져오기
+                String summaryJson = summary.getSummaryJson();
+                String conversationJson = summary.getConversationJson(); // 대화 JSON
+
+                // JSON 파싱하여 title과 summary 추출
+                JSONObject summaryJsonObject = new JSONObject(summaryJson);
+                String title = summaryJsonObject.optString("title", "No Title");
+                String htmlContent = summaryJsonObject.optString("summary", "No Content");
+
+                // 데이터를 화면에 설정
+                tvTitle.setText(title);
+                tvContent.setText(HtmlCompat.fromHtml(htmlContent, HtmlCompat.FROM_HTML_MODE_LEGACY));
+
+                // 대화 전체보기 버튼 클릭 이벤트
+                btnViewConversation.setOnClickListener(v -> {
+                    Intent intent = new Intent(ViewDiaryActivity.this, ConversationActivity.class);
+                    intent.putExtra("conversationJson", conversationJson); // 대화 내용을 전달
+                    startActivity(intent);
+                });
+            } else {
+                // 데이터가 없는 경우 기본값 표시
+                tvTitle.setText("No Title");
+                tvContent.setText("No Content");
+                btnViewConversation.setEnabled(false); // 대화보기 버튼 비활성화
+                Log.d(TAG, "해당 날짜에 대한 데이터가 없습니다: " + date);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "데이터 로드 중 오류 발생", e);
+            tvTitle.setText("Error Loading Title");
+            tvContent.setText("Error Loading Content");
+            btnViewConversation.setEnabled(false); // 대화보기 버튼 비활성화
+        }
     }
 
-    private void saveDiary(String date) {
-        // SharedPreferences 등을 통해 데이터를 저장
-        // 저장 후, 조회 모드로 전환
-        disableEditing();
-    }
-
-    private void enableEditing() {
-        etTitle.setEnabled(true);
-        etContent.setEnabled(true);
-        btnSave.setVisibility(View.VISIBLE);
-    }
-
-    private void disableEditing() {
-        etTitle.setEnabled(false);
-        etContent.setEnabled(false);
-        btnSave.setVisibility(View.GONE);
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // SQLiteHelper 닫기
+        if (dbHelper != null) {
+            dbHelper.close();
+        }
     }
 }

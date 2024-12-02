@@ -161,7 +161,7 @@ public class FragmentCalendar extends Fragment {
     }
 
     private void showDayInfoDialog(int day) {
-        String selectedDate = year + "-" + (month + 1) + "-" + day;
+        String selectedDate = String.format("%04d-%02d-%02d", year, month + 1, day);
 
         Intent intent = new Intent(getContext(), ViewDiaryActivity.class);
         intent.putExtra("selectedDate", selectedDate);
