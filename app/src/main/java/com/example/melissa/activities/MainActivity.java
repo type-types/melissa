@@ -17,6 +17,7 @@ import androidx.viewpager2.widget.ViewPager2;
 
 import com.example.melissa.adapters.CalendarPagerAdapter;
 import com.example.melissa.R;
+import com.example.melissa.database.SQLiteHelper;
 import com.example.melissa.utils.FloatingActionButtonHelper;
 
 import ai.picovoice.porcupine.*;
@@ -94,6 +95,10 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
             Log.e("MainActivity", "PorcupineManager 초기화 실패: " + e.getMessage());
         }
+
+        // SQLiteHelper 초기화
+        SQLiteHelper dbHelper = new SQLiteHelper(this);
+        dbHelper.getWritableDatabase();
     }
 
     private void requestMicrophonePermission() {
